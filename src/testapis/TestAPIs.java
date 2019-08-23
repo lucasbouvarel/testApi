@@ -17,34 +17,23 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.entity.StringEntity;
 import org.json.JSONObject;
+import com.lightstreamer.ls_client.*;
+import java.util.ArrayList;
+
+
 /**
  *
  * @author lucasbouvarel
  */
 public class TestAPIs {
 
-    
-    
-    
-    public static String readURL(String url) throws IOException {
-        try(InputStream is = new URL(url).openConnection().getInputStream()) {			
-          BufferedReader reader = new BufferedReader(new InputStreamReader(is, "utf-8"));
-
-          StringBuilder builder = new StringBuilder();
-          for(String line = reader.readLine(); line != null; line = reader.readLine()) {
-            builder.append(line + "\n");
-          }
-          return builder.toString();
-        }
-    }
     /**
      * @param args the command line arguments
      * 
      * 
      * 
      */
-    
-    
+    public static double marketOffer=0.0;
     public static void main(String[] args) throws IOException {
         JSONObject json = new JSONObject();
         json.put("identifier", "eticlyon");
@@ -53,6 +42,8 @@ public class TestAPIs {
         // Cannot set null directly
         json.put("encryptedPassword", JSONObject.NULL);
         CloseableHttpClient client = HttpClients.createDefault();
+        
+        
         try {
             HttpPost request = new HttpPost("https://demo-api.ig.com/gateway/deal/session");
             StringEntity params = new StringEntity(json.toString());
@@ -67,7 +58,16 @@ public class TestAPIs {
             HttpResponse response = client.execute(request);
             System.out.println("Response Code : " + 
                    response.getStatusLine().getStatusCode());
+            Header Hcst = response.getFirstHeader("CST");
+            Header Hxst = response.getFirstHeader("X-SECURITY-TOKEN");
+            String cst = Hcst.getValue();
+            String xst = Hxst.getValue();
+            System.out.println("CSTTTTTTT : "
+                  +            cst);
+            System.out.println("XCSCSCSCSCS : "
+                  +            xst);
             Header[] headers = response.getAllHeaders();
+            
             
             for (Header header : headers) {
                     System.out.println( header.getName() 
@@ -83,12 +83,48 @@ public class TestAPIs {
             }
 
             System.out.println(result.toString());
-            } catch (Exception ex) {
-                // handle exception here
-            } finally {
-                client.close();
+            
+        //Nouveau client
+            LSClient lsClient =new LSClient();
+            ConnectionInfo connectionInfo=new ConnectionInfo();
+            connectionInfo.user="eticLyon";
+            connectionInfo.password="CST-" + cst + "|XST-" +xst;
+            System.out.println(connectionInfo.password);
+            connectionInfo.pushServerUrl="https://demo-apd.marketdatasystems.com";
+            
+        //connection
+            ConnectionListenerAdapter adapter=new ConnectionListenerAdapter();
+            System.out.println("hey");
+            lsClient.openConnection(connectionInfo, adapter);
+            
+            String tradeableEpic = "CS.D.EURUSD.CFD.IP";
+            System.out.println("passé");
+            
+        //Array de listener
+            ArrayList<HandyTableListenerAdapter> listeners = new ArrayList<>();
+            System.out.println("salut");
+            StreamingAPI streamingApi=new StreamingAPI();
+            listeners.add(streamingApi.subscribeForMarket(tradeableEpic, new HandyTableListenerAdapter() {
+                public void onUpdate(int i, String s, UpdateInfo updateInfo) {
+                   marketOffer = Double.valueOf(updateInfo.getNewValue("OFFER"));
+                   System.out.println("EPIC "+tradeableEpic +"   Offer price: "+marketOffer);
+                }
+            }, lsClient
+            ));
+            while(true){
+              
             }
             
+        } catch (Exception ex) {
+            // handle exception here
+        } finally {
+            client.close();
+        }
+        
     }
+    
+    /*private static void logMessage(int x, int y, String message) {
+      logMessage(x, y, message, Ansi.Color.DEFAULT, null);
+   }*/
     
 }
