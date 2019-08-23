@@ -34,6 +34,7 @@ public class TestAPIs {
      * 
      */
     public static double marketOffer=0.0;
+    public static double bidOffer=0.0;
     public static void main(String[] args) throws IOException {
         JSONObject json = new JSONObject();
         json.put("identifier", "eticlyon");
@@ -89,24 +90,22 @@ public class TestAPIs {
             ConnectionInfo connectionInfo=new ConnectionInfo();
             connectionInfo.user="eticLyon";
             connectionInfo.password="CST-" + cst + "|XST-" +xst;
-            System.out.println(connectionInfo.password);
             connectionInfo.pushServerUrl="https://demo-apd.marketdatasystems.com";
             
         //connection
             ConnectionListenerAdapter adapter=new ConnectionListenerAdapter();
-            System.out.println("hey");
             lsClient.openConnection(connectionInfo, adapter);
             
-            String tradeableEpic = "CS.D.EURUSD.CFD.IP";
-            System.out.println("passé");
+            String tradeableEpic = "CS.D.EURUSD.MINI.IP";
             
         //Array de listener
             ArrayList<HandyTableListenerAdapter> listeners = new ArrayList<>();
-            System.out.println("salut");
             StreamingAPI streamingApi=new StreamingAPI();
             listeners.add(streamingApi.subscribeForMarket(tradeableEpic, new HandyTableListenerAdapter() {
                 public void onUpdate(int i, String s, UpdateInfo updateInfo) {
                    marketOffer = Double.valueOf(updateInfo.getNewValue("OFFER"));
+                   bidOffer=Double.valueOf(updateInfo.getNewValue("BID"));
+                   System.out.println("EPIC "+tradeableEpic +"   Offer price: "+bidOffer);
                    System.out.println("EPIC "+tradeableEpic +"   Offer price: "+marketOffer);
                 }
             }, lsClient
