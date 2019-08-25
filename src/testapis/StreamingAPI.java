@@ -23,7 +23,7 @@ public class StreamingAPI {
 
         ExtendedTableInfo extendedTableInfo = new ExtendedTableInfo(
                         new String[]{subscriptionKey}, "MERGE", new String[]{"BID",
-                                        "OFFER", "MARKET_STATE"}, true);
+                                        "OFFER", "MARKET_STATE", "CHANGE"}, true);
 
         final SubscribedTableKey subscribedTableKey = lsClient.subscribeTable(
                         extendedTableInfo, adapter, false);
